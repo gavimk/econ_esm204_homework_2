@@ -10,6 +10,9 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
 ```{r}
+
+# Load libraries and bring in data
+
 library(tidyverse)
 library(janitor)
 library(stargazer)
@@ -23,6 +26,9 @@ mc_sector <- readxl::read_xlsx("HW2_Data.xlsx") %>%
 ##### Sector A
 
 ```{r}
+# ----------------
+# Sector A - MC curve
+# ----------------
 
 sector_a <- mc_sector %>% 
   select(abatement, mc_a)
@@ -37,9 +43,13 @@ sector_a_plot
 
 ```
 
-P = 0.5A
+Marginal Cost = (m)*Abatement + (b)
 
 ```{r}
+# -----------------
+# Sector A - linear model overlayed with MC curve
+# -----------------
+
 lm_sector_a <- lm(mc_a ~ abatement, data = sector_a)
   
 predict_df_a <- predict(lm_sector_a, sector_a)
@@ -64,5 +74,12 @@ ggplot() +
 
 ```{r, results = "asis"}
 
+# -----------
+# Sector A - Linear model stats
+# -----------
+
 stargazer(lm_sector_a, type = "html")
 ```
+
+### Question 2
+##### 
