@@ -1,0 +1,68 @@
+---
+title: "econ_hw2"
+author: "David Segan"
+date: "4/22/2020"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(stargazer)
+
+mc_sector <- readxl::read_xlsx("HW2_Data.xlsx") %>% 
+  clean_names()
+
+```
+
+### Question 1
+##### Sector A
+
+```{r}
+
+sector_a <- mc_sector %>% 
+  select(abatement, mc_a)
+
+sector_a_plot <- ggplot(sector_a, aes(x = abatement, y = mc_a)) + 
+  geom_line() +
+  labs(title = "Sector A estimates for marginal cost of abatement by abatement levels",
+       x = "Abatement (Tons)",
+       y = "Marginal Cost")
+
+sector_a_plot
+
+```
+
+P = 0.5A
+
+```{r}
+lm_sector_a <- lm(mc_a ~ abatement, data = sector_a)
+  
+predict_df_a <- predict(lm_sector_a, sector_a)
+
+df_a <- data.frame(sector_a, predict_df_a)
+
+ggplot() +
+  geom_line(data = lm_sector_a,
+             aes(x = abatement,
+                 y = mc_a),
+             color = "coral",
+             size = 1, 
+             alpha = 1) +
+  geom_line(data = df_a,
+            aes(x = abatement,
+                y = predict_df_a)) +
+  theme_light() +
+  labs(title = "Sector A predicted marginal cost of abatement by abatement levels",
+       x = "Abatement (Tons)",
+       y = "Marginal Cost")
+```
+
+```{r, results = "asis"}
+
+stargazer(lm_sector_a, type = "html")
+```
