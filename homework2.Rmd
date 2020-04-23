@@ -106,11 +106,13 @@ sector_d_plot
 
 lm_sector_d <- lm(mc_d ~ abatement, data = sector_d)
 
-poly_sector_d <- lm(mc_d ~ poly(abatement, 3, data = sector_d))
-  
+# poly_sector_d <- lm(mc_d ~ poly(abatement, 3, data = sector_d))
+
+# exp_sector_d <- nls(mc_d ~ exp(a+b*abatement), data = sector_d)
+
 predict_df_d <- predict(lm_sector_d, sector_d)
 
-df_a <- data.frame(sector_d, predict_df_d)
+df_d <- data.frame(sector_d, predict_df_d)
 
 ggplot() +
   geom_line(data = lm_sector_d,
@@ -128,19 +130,38 @@ ggplot() +
        y = "Marginal Cost")
 ```
 
+```{r, results = "asis"}
+
+# -----------
+# Sector D - Model stats
+# -----------
+
+stargazer(lm_sector_d, type = "html")
+```
+
+
 ### Question 2
 ##### Demand for emissions
 
 ```{r}
 
+# Sector A
 a_coeff = 0.513
 a_const = 1.655
 a_emissions_current = 170
 
-a_supply <- function(x) {y = a_coeff*x + a_const}
+a_supply <- function(abatement) {y = a_coeff*abatement + a_const}
 
-a_demand <- function(x) {y = a_coeff*(a_emissions_current-a_emissions_new)+a_const}
+a_demand <- function(abatement) {y = a_coeff*(a_emissions_current-a_emissions_new)+a_const}
 
+# Sector D
+d_coeff = 
+d_const = 
+d_emissions_current = 300
+
+d_supply <- function(abatement) {y = d_coeff*abatement + d_const}
+
+d_demand <- function(abatement) {y = d_coeff*(d_emissions_current-d_emissions_new)+d_const}
 
 ```
 
