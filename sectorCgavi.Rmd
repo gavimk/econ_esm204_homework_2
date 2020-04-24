@@ -1,0 +1,117 @@
+---
+title: "econ_hw2"
+author: "David Segan"
+date: "4/22/2020"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+
+# Load libraries and bring in data
+
+library(tidyverse)
+library(janitor)
+library(stargazer)
+
+mc_sector <- readxl::read_xlsx("HW2_Data.xlsx") %>% 
+  clean_names()
+
+```
+
+### Question 1
+##### Sector A
+
+```{r}
+# ----------------
+# Sector C - MC curve
+# ----------------
+
+sector_c <- mc_sector %>% 
+  select(abatement, mc_c) %>% 
+  filter(abatement >= 40)
+
+sector_c_plot <- ggplot(sector_c, aes(x = abatement, y = mc_c)) + 
+  geom_line() +
+  labs(title = "Sector B estimates for marginal cost of abatement by abatement levels",
+       x = "Abatement (Tons)",
+       y = "Marginal Cost")
+
+sector_c_plot
+
+```
+
+Marginal Cost = (m)*Abatement + (b)
+
+```{r}
+# -----------------
+# Sector C - linear model overlayed with MC curve
+# -----------------
+
+lm_sector_c <- lm(mc_c ~ abatement, data = sector_c)
+  
+predict_df_c <- predict(lm_sector_c, sector_c)
+
+df_c <- data.frame(sector_c, predict_df_c)
+
+summary(lm_sector_c)
+
+ggplot() +
+  geom_line(data = lm_sector_c,
+             aes(x = abatement,
+                 y = mc_c),
+             color = "coral",
+             size = 1, 
+             alpha = 1) +
+  geom_line(data = df_c,
+            aes(x = abatement,
+                y = predict_df_c)) +
+  theme_light() +
+  labs(title = "Sector A predicted marginal cost of abatement by abatement levels",
+       x = "Abatement (Tons)",
+       y = "Marginal Cost")
+```
+
+```{r, results = "asis"}
+
+# -----------
+# Sector C - Linear model stats
+# -----------
+
+stargazer(lm_sector_c, type = "html")
+```
+
+
+
+### Question 2
+##### Demand for emissions
+
+```{r}
+
+# Sector C
+
+sector_c_new <- df_c %>% 
+  mutate(q = 230-predict_df_c)
+
+c_coeff = 1.390
+c_const = -54.766
+c_emissions_current = 230
+
+c_demand <- function(q) {
+  y = c_coeff*(c_emissions_current - q) + c_const
+  return(y)
+}
+
+demand_y_values_c <- c_demand(sector_c_new$q)
+c_demand(0)
+
+df_demand_c <- data.frame(sector_c_new, demand_y_values_c)
+
+ggplot(df_demand_c, aes(x = q, y = demand_y_values_c)) +
+  geom_line()+
+  expand_limits(x = 0)
+
+```
