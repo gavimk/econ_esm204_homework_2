@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
-```{r}
+```{r install packages, read in data}
 
 # Load libraries and bring in data
 
@@ -25,7 +25,7 @@ mc_sector <- readxl::read_xlsx("HW2_Data.xlsx") %>%
 ### Question 1
 ##### Sector A
 
-```{r}
+```{r sector a MC curve}
 # ----------------
 # Sector A - MC curve
 # ----------------
@@ -37,7 +37,7 @@ sector_a_plot <- ggplot(sector_a, aes(x = abatement, y = mc_a)) +
   geom_line() +
   labs(title = "Sector A estimates for marginal cost of abatement by abatement levels",
        x = "Abatement (Tons)",
-       y = "Marginal Cost")
+       y = "Marginal Cost ($/ton)")
 
 sector_a_plot
 
@@ -45,7 +45,7 @@ sector_a_plot
 
 Marginal Cost = (m)*Abatement + (b)
 
-```{r}
+```{r sector A LM and MC}
 # -----------------
 # Sector A - linear model overlayed with MC curve
 # -----------------
@@ -72,7 +72,7 @@ ggplot() +
        y = "Marginal Cost")
 ```
 
-```{r, results = "asis"}
+```{r A stargazer, results = "asis"}
 
 # -----------
 # Sector A - Linear model stats
@@ -81,9 +81,66 @@ ggplot() +
 stargazer(lm_sector_a, type = "html")
 ```
 
+##### Sector B
+
+```{r sector B MC Curve}
+# ----------------
+# Sector B - MC curve
+# ----------------
+
+sector_b <- mc_sector %>% 
+  select(abatement, mc_b)
+
+sector_a_plot <- ggplot(sector_b, aes(x = abatement, y = mc_b)) + 
+  geom_line() +
+  labs(title = "Sector B estimates for marginal cost of abatement by abatement levels",
+       x = "Abatement (Tons)",
+       y = "Marginal Cost ($/ton)")
+
+sector_a_plot
+
+```
+
+```{r B LM and MC}
+# -----------
+# Sector B - linear model overlayed with MC curve
+# -----------
+
+# Make a linear model for sector b:
+
+linear_b <- lm(mc_b ~ abatement, data = mc_sector)
+
+# Then, predict it back to the original data frame
+
+predict_df_b <- mc_sector %>% 
+  mutate(pred_b = predict(linear_b, mc_sector))
+
+# And plot it
+
+ggplot(data = predict_df_b) +
+  geom_line(aes(x = abatement, y = mc_b),
+            color = "lightsteelblue3",
+            size = 1, 
+            alpha = 1) +
+  geom_line(aes(x = abatement, y = pred_b)) +
+  
+  theme_light() +
+  labs(title = "Sector B predicted marginal cost of abatement by abatement levels",
+       x = "Abatement (Tons)",
+       y = "Marginal Cost")
+  
+```
+
+Sector B Regression Table:
+
+```{r B stargazer, results = "asis"}
+stargazer(linear_b, type = "html")
+```
+
+
 ##### Sector D
 
-```{r}
+```{r D MC curve}
 # ----------------
 # Sector D - MC curve
 # ----------------
@@ -99,7 +156,8 @@ sector_d_plot <- ggplot(sector_d, aes(x = abatement, y = mc_d)) +
 
 sector_d_plot
 ```
-```{r}
+
+```{r D LM and MC curve}
 # -----------------
 # Sector D - linear model overlayed with MC curve
 # -----------------
@@ -130,7 +188,7 @@ ggplot() +
        y = "Marginal Cost")
 ```
 
-```{r, results = "asis"}
+```{r D stargazer, results = "asis"}
 
 # -----------
 # Sector D - Model stats
@@ -143,7 +201,7 @@ stargazer(lm_sector_d, type = "html")
 ### Question 2
 ##### Demand for emissions
 
-```{r}
+```{r A demand curve}
 
 # Sector A
 a_coeff = 0.513
@@ -154,6 +212,9 @@ a_supply <- function(abatement) {y = a_coeff*abatement + a_const}
 
 a_demand <- function(abatement) {y = a_coeff*(a_emissions_current-a_emissions_new)+a_const}
 
+```
+
+```{r}
 # Sector D
 d_coeff = 
 d_const = 
@@ -162,6 +223,62 @@ d_emissions_current = 300
 d_supply <- function(abatement) {y = d_coeff*abatement + d_const}
 
 d_demand <- function(abatement) {y = d_coeff*(d_emissions_current-d_emissions_new)+d_const}
+
+```
+
+
+##### Sector B Demand:
+
+Now, we needa get demand curves from this. We know sector B currenty produces 200 tons of CO2.
+
+We know the equation of the cost curves for abatement is...
+
+price = 0.392 * abatement + 8.785
+
+
+```{r B demand curve}
+## b_coeff is the slope of the supply curve for abatement
+## b_const is the intercept of the supply curve for abatement
+
+b_coeff <- 0.392
+b_const <- 8.785
+b_emissions_current <- 200
+  
+# From these, we can make supply curves...
+
+b_supply <- function(abatement) {b_coeff * abatement + b_const}
+
+# b_supply_df <- b_demand_df %>% 
+#   mutate(b_price = b_supply(q_pollution))
+# 
+# ggplot(b_supply_df, aes(x = q_pollution, y = b_price)) +
+#   geom_line()
+
+# And demand curves.
+
+b_price <- function(q){
+  b_coeff*(b_emissions_current - q) + b_const
+}
+
+# How do we apply this to our data, though?
+# Let's make a list of some possible Q values, starting at 0, ending at 300.
+
+q_pollution <- seq(0, 300, by = 10)
+
+# And then, we can calculate a demand curve based on this...
+# By first turning it into a data frame,
+b_demand_df <- data.frame(q_pollution)
+
+# Then applying the b_price function to the quantity of good produced:
+b_demand_df <- b_demand_df %>% 
+  mutate(b_price = b_price(q_pollution))
+
+# Then we can plot it!
+
+ggplot(data = b_demand_df, aes(x = q_pollution, y = b_price)) +
+  geom_line()
+
+
 
 ```
 
