@@ -278,7 +278,5 @@ b_demand_df <- b_demand_df %>%
 ggplot(data = b_demand_df, aes(x = q_pollution, y = b_price)) +
   geom_line()
 
-
-
 ```
 
